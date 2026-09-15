@@ -102,7 +102,7 @@ void MainComponent::checkForUpdatesAsync()
 {
     juce::Thread::launch([this]()
     {
-        juce::URL url("https://api.github.com/repos/EtherK3N/k3n-armoni-composer/releases/latest");
+        juce::URL url("https://api.github.com/repos/EtherK3N/ArmoniComposer/releases/latest");
         auto stream = url.createInputStream(juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
                                                .withConnectionTimeoutMs(3000));
 
@@ -114,7 +114,7 @@ void MainComponent::checkForUpdatesAsync()
             if (json.isObject())
             {
                 const auto latestTag = json.getProperty("tag_name", "").toString();
-                const auto htmlUrl = json.getProperty("html_url", "https://github.com/EtherK3N/k3n-armoni-composer/releases").toString();
+                const auto htmlUrl = json.getProperty("html_url", "https://github.com/EtherK3N/ArmoniComposer/releases").toString();
 
                 juce::String currentVersion;
                 if (auto* app = juce::JUCEApplication::getInstance())

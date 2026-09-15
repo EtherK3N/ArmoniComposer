@@ -34,7 +34,7 @@ jobs:
         run: |
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build LoopStation & Unit Tests
+      - name: Build Armoni Composer & Unit Tests
         shell: bash
         run: |
           cmake --build build --config Release --parallel 2>&1 | tee build.log
@@ -56,12 +56,12 @@ jobs:
       - name: Run Automated Test Suite
         shell: pwsh
         run: |
-          .\build\LoopStation_Tests_artefacts\Release\LoopStation_Tests.exe
+          .\build\ArmoniComposer_Tests_artefacts\Release\ArmoniComposer_Tests.exe
 
 
-      - name: Upload LoopStation Windows Executable
+      - name: Upload Armoni Composer Windows Executable
         uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: LoopStation-Windows-x64
-          path: build/LoopStation_artefacts/Release/LoopStation.exe
+          name: ArmoniComposer-Windows-x64
+          path: build/ArmoniComposer_artefacts/Release/ArmoniComposer.exe

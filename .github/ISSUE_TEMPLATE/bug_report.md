@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create a report to help us improve LoopStation
+about: Create a report to help us improve Armoni Composer
 title: '[BUG] '
 labels: 'bug'
 assignees: ''

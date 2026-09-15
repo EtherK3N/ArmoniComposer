@@ -1,6 +1,6 @@
-# 🧪 Testing & Verification Guide: K3N Armoni Composer
+# 🧪 Testing & Verification Guide: Armoni Composer
 
-This guide explains how to compile, verify, and test **K3N Armoni Composer** — both through the **Automated Unit Test Suite** and via **Physical Hardware Verification** on Windows.
+This guide explains how to compile, verify, and test **Armoni Composer** — both through the **Automated Unit Test Suite** and via **Physical Hardware Verification** on Windows.
 
 ---
 
@@ -55,7 +55,7 @@ We have built a dedicated automated test suite in [`Tests/TestRunner.cpp`](Tests
 ### To Run the Test Suite:
 ```bash
 # Execute the compiled test binary:
-.\build\LoopStation_Tests_artefacts\Release\LoopStation_Tests.exe
+.\build\ArmoniComposer_Tests_artefacts\Release\ArmoniComposer_Tests.exe
 ```
 
 ### What It Tests:
@@ -73,7 +73,7 @@ We have built a dedicated automated test suite in [`Tests/TestRunner.cpp`](Tests
 
 ### Step 1: Launch the Main App
 ```bash
-.\build\LoopStation_artefacts\Release\LoopStation.exe
+.\build\ArmoniComposer_artefacts\Release\ArmoniComposer.exe
 ```
 
 ### Step 2: Audio Device Setup

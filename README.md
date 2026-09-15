@@ -1,4 +1,5 @@
-# K3N Armoni Composer
+# Armoni Composer
+### by EtherK3N (K3N Solver)
 
 <div align="center">
 
@@ -22,7 +23,7 @@ No expensive hardware. No subscriptions. No cloud. Just your creativity.
 Dedicated drum pads, MIDI controllers, and loop stations cost €80–€500.  
 A USB membrane keyboard at a flea market costs €2.
 
-**K3N Armoni Composer** makes every cheap keyboard a performance instrument. Plug in one keyboard or four — the system tracks each device independently at the OS kernel level via Win32 Raw Input, routes each to its own instrument role (Drums / Bass / Synth / FX), and lets you build layered live loops in real time, just like a Boss RC-505 but with zero specialized hardware.
+**Armoni Composer** (by EtherK3N / K3N Solver) makes every cheap keyboard a performance instrument. Plug in one keyboard or four — the system tracks each device independently at the OS kernel level via Win32 Raw Input, routes each to its own instrument role (Drums / Bass / Synth / FX), and lets you build layered live loops in real time, just like a Boss RC-505 but with zero specialized hardware.
 
 > Built for bedroom producers, street performers, students in underfunded schools, and anyone who believes music should not cost money to make.
 
@@ -103,8 +104,8 @@ The critical technical challenge this solves: Windows normally merges all USB ke
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/EtherK3N/k3n-armoni-composer.git
-cd k3n-armoni-composer
+git clone --recursive https://github.com/EtherK3N/ArmoniComposer.git
+cd ArmoniComposer
 
 # Configure
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
@@ -113,7 +114,7 @@ cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ```
 
-Binary output: `build/LoopStation_artefacts/Release/LoopStation.exe`
+Binary output: `build/ArmoniComposer_artefacts/Release/ArmoniComposer.exe`
 
 For Docker-based isolated testing:
 
@@ -155,7 +156,7 @@ If you use this tool, make something with it, or just find the concept interesti
 
 ## Author
 
-Built by **[@EtherK3N](https://github.com/EtherK3N)** — part of the **K3N** creative and engineering brand.
+Built by **[@EtherK3N](https://github.com/EtherK3N)** (K3N Solver) — part of the **K3N** creative and engineering brand.
 
 High-performance C++, real-time audio systems, accessible technology, modern web and application development.
 

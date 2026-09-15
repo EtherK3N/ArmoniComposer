@@ -25,8 +25,8 @@ Status: **Deferred for Execution (Scheduled for Tomorrow)**
   }
   ```
 - **Additional Bug**: Line 105 contains a raw template placeholder URL:
-  `https://api.github.com/repos/YOUR_GITHUB/k3n-armoni-composer/releases/latest`  
-  Must be updated to `EtherK3N/k3n-armoni-composer`.
+  `https://api.github.com/repos/YOUR_GITHUB/ArmoniComposer/releases/latest`  
+  Must be updated to `EtherK3N/ArmoniComposer`.
 
 ### B. Why TestRunner Did Not Catch It
 - `LoopStation_Tests` in `CMakeLists.txt` only compiles core DSP & logic (`AudioEngine`, `MetronomeClock`, `BpmQuantizer`).
@@ -62,10 +62,10 @@ The external technical audit highlighted critical signals that differentiate a g
 ### Step 1: Fix C++ Build & Target Configuration
 1. Update `Source/MainComponent.cpp`:
    - Use `juce::JUCEApplication::getInstance()->getApplicationVersion()`.
-   - Update repository release URL to `EtherK3N/k3n-armoni-composer`.
+   - Update repository release URL to `EtherK3N/ArmoniComposer`.
 2. Clean up `CMakeLists.txt`:
    - Ensure clean linking flags and targets.
-   - Verify both `LoopStation` and `LoopStation_Tests` build cleanly.
+   - Verify both `ArmoniComposer` and `ArmoniComposer_Tests` build cleanly.
 
 ### Step 2: LoopTrack $O(1)$ Event Scheduler Refactoring
 - Keep `recordedEvents` sorted by `offsetSamples`.

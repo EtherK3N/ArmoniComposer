@@ -19,12 +19,12 @@
  #include <windows.h>
 #endif
 
-class LoopStationApplication : public juce::JUCEApplication
+class ArmoniComposerApplication : public juce::JUCEApplication
 {
 public:
-    LoopStationApplication() = default;
+    ArmoniComposerApplication() = default;
 
-    const juce::String getApplicationName() override       { return "K3N Armoni Composer"; }
+    const juce::String getApplicationName() override       { return "Armoni Composer"; }
     const juce::String getApplicationVersion() override    { return "0.1.0"; }
 
     bool moreThanOneInstanceAllowed() override             { return true; }
@@ -147,4 +147,4 @@ private:
     std::unique_ptr<MainWindow> mainWindow;
 };
 
-START_JUCE_APPLICATION(LoopStationApplication)
+START_JUCE_APPLICATION(ArmoniComposerApplication)

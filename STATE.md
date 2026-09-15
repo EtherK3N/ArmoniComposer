@@ -1,4 +1,4 @@
-# Workspace State: K3N Armoni Composer
+# Workspace State: Armoni Composer
 
 Last Updated: **September 2026**
 
@@ -64,7 +64,7 @@ Detailed post-mortem and audit documented in `TECHNICAL_AUDIT_ACTION_PLAN.md`:
 
 1. [x] **Fixed MSVC CI Failure (`MainComponent.cpp`)**:
    - Resolved `error C3861: 'getApplicationVersion': identifier not found` at line 119 using `juce::JUCEApplication::getInstance()->getApplicationVersion()`.
-   - Updated release URL placeholder (`YOUR_GITHUB` -> `EtherK3N/k3n-armoni-composer`).
+   - Updated release URL placeholder (`YOUR_GITHUB` -> `EtherK3N/ArmoniComposer`).
 2. [x] **LoopTrack Event Scheduling Optimization**:
    - Replaced $O(N)$ linear loop `for (const auto& ev : recordedEvents)` per audio block with a sorted timeline cursor ($O(1)$ block check) and modulo wrap-around handling.
 3. [x] **De-buzzwording & Realism in Documentation**:
@@ -78,5 +78,11 @@ Detailed post-mortem and audit documented in `TECHNICAL_AUDIT_ACTION_PLAN.md`:
    - Replaced with fine-grained direct module includes (`<juce_core/juce_core.h>`, `<juce_gui_basics/juce_gui_basics.h>`, `<juce_audio_basics/juce_audio_basics.h>`, etc.).
    - Removed deprecated `NEEDS_JUCE_HEADER` and explicitly linked required JUCE modules in `CMakeLists.txt`.
    - Translated `DOCKER_BUILD_AND_TEST.bat` to English and purged legacy `AVVIA_SIMULATORE.bat`.
+6. [x] **Product Rebranding & Hyphenless SEO Optimization (Option 1)**:
+   - Tool Name: `Armoni Composer` (clean, zero hyphens).
+   - Copyright & Rights: `Copyright (C) 2026 EtherK3N (K3N Solver) - Armoni Composer` in `LICENSE`.
+   - Author signature: `by EtherK3N (K3N Solver)`.
+   - Repository slug: `EtherK3N/ArmoniComposer`.
+   - Updated CMake targets (`ArmoniComposer`, `ArmoniComposer_Tests`), CI workflow (`.github/workflows/build.yml`), JUCE App class (`ArmoniComposerApplication`), and Web simulator SEO meta keywords/descriptions.
 
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(LoopStation VERSION 0.1.0)
+project(ArmoniComposer VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,13 +28,13 @@ endif()
 # ===========================================================================
 # Main GUI Application
 # ===========================================================================
-juce_add_gui_app(LoopStation
-    PRODUCT_NAME "LoopStation"
-    COMPANY_NAME "k3n"
+juce_add_gui_app(ArmoniComposer
+    PRODUCT_NAME "Armoni Composer"
+    COMPANY_NAME "EtherK3N"
     VERSION 0.1.0
 )
 
-target_sources(LoopStation PRIVATE
+target_sources(ArmoniComposer PRIVATE
     Source/Main.cpp
     Source/MainComponent.cpp
     Source/DeviceManager.cpp
@@ -48,7 +48,7 @@ target_sources(LoopStation PRIVATE
     Source/PerformanceViewComponent.cpp
 )
 
-target_include_directories(LoopStation PRIVATE
+target_include_directories(ArmoniComposer PRIVATE
     Source
 )
 
@@ -56,14 +56,14 @@ if (WIN32)
     add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
-target_compile_definitions(LoopStation PRIVATE
+target_compile_definitions(ArmoniComposer PRIVATE
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     NOMINMAX=1
     WIN32_LEAN_AND_MEAN=1
 )
 
-target_link_libraries(LoopStation PRIVATE
+target_link_libraries(ArmoniComposer PRIVATE
     juce::juce_core
     juce::juce_events
     juce::juce_graphics
@@ -79,18 +79,18 @@ target_link_libraries(LoopStation PRIVATE
 )
 
 if (WIN32)
-    target_link_libraries(LoopStation PRIVATE hid.lib setupapi.lib user32.lib wininet.lib)
+    target_link_libraries(ArmoniComposer PRIVATE hid.lib setupapi.lib user32.lib wininet.lib)
 endif()
 
 
 # ===========================================================================
 # Automated Unit Test Suite
 # ===========================================================================
-juce_add_console_app(LoopStation_Tests
-    PRODUCT_NAME "LoopStation_Tests"
+juce_add_console_app(ArmoniComposer_Tests
+    PRODUCT_NAME "ArmoniComposer_Tests"
 )
 
-target_sources(LoopStation_Tests PRIVATE
+target_sources(ArmoniComposer_Tests PRIVATE
     Tests/TestRunner.cpp
     Source/DeviceManager.cpp
     Source/RawInputHandler.cpp
@@ -101,18 +101,18 @@ target_sources(LoopStation_Tests PRIVATE
     Source/ShiftLayerSystem.cpp
 )
 
-target_include_directories(LoopStation_Tests PRIVATE
+target_include_directories(ArmoniComposer_Tests PRIVATE
     Source
 )
 
-target_compile_definitions(LoopStation_Tests PRIVATE
+target_compile_definitions(ArmoniComposer_Tests PRIVATE
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     NOMINMAX=1
     WIN32_LEAN_AND_MEAN=1
 )
 
-target_link_libraries(LoopStation_Tests PRIVATE
+target_link_libraries(ArmoniComposer_Tests PRIVATE
     juce::juce_core
     juce::juce_events
     juce::juce_graphics
@@ -128,6 +128,6 @@ target_link_libraries(LoopStation_Tests PRIVATE
 )
 
 if (WIN32)
-    target_link_libraries(LoopStation_Tests PRIVATE hid.lib setupapi.lib user32.lib wininet.lib)
+    target_link_libraries(ArmoniComposer_Tests PRIVATE hid.lib setupapi.lib user32.lib wininet.lib)
 endif()
 

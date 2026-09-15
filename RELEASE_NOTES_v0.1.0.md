@@ -1,7 +1,7 @@
-# K3N Armoni Composer — Release v0.1.0 (September 6, 2026)
+# Armoni Composer — Release v0.1.0 (September 6, 2026)
 
 **Public Preview & Open Hardware Orchestration Release**  
-Author: **[@EtherK3N](https://github.com/EtherK3N)**  
+Author: **[@EtherK3N](https://github.com/EtherK3N)** (K3N Solver)  
 License: **GNU Affero General Public License v3.0 (AGPL-3.0)**
 
 ---
@@ -58,4 +58,4 @@ It solves a fundamental limitation of consumer operating systems: Windows normal
 
 ## 🤝 Community & Next Steps
 
-This milestone lays the technical foundation for Phase 2 (modifier shift layers, Ableton Link synchronization, and native VST3/CLAP wrappers). Feedback, bug reports, and contributions are welcomed via [GitHub Issues](https://github.com/EtherK3N/k3n-armoni-composer/issues).
+This milestone lays the technical foundation for Phase 2 (modifier shift layers, Ableton Link synchronization, and native VST3/CLAP wrappers). Feedback, bug reports, and contributions are welcomed via [GitHub Issues](https://github.com/EtherK3N/ArmoniComposer/issues).

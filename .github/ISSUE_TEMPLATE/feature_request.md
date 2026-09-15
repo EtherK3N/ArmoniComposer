@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea or new capability for LoopStation
+about: Suggest an idea or new capability for Armoni Composer
 title: '[FEATURE] '
 labels: 'enhancement'
 assignees: ''

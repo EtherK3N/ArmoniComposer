@@ -40,8 +40,8 @@ The following matrix documents all third-party technologies, frameworks, and sys
 We take the security of our users seriously. If you discover a security vulnerability or supply chain risk, please report it privately:
 
 1. **Preferred Method**: Open a **Private Vulnerability Report** via GitHub Security Advisories at:  
-   `https://github.com/EtherK3N/k3n-armoni-composer/security/advisories/new`
-2. **Alternative Contact**: Email security disclosures to **`k3n.solver@gmail.com`** with the subject `[SECURITY ISSUE] K3N Armoni Composer`.
+   `https://github.com/EtherK3N/ArmoniComposer/security/advisories/new`
+2. **Alternative Contact**: Email security disclosures to **`k3n.solver@gmail.com`** with the subject `[SECURITY ISSUE] Armoni Composer`.
 
 ### Response SLA & Remediation Policy
 - **Initial Acknowledgement**: Within **48 hours**.
