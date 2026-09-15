@@ -201,6 +201,7 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
     currentSampleRate = sampleRate;
     metronome.prepareToPlay(sampleRate, samplesPerBlockExpected);
     quantizer.setSampleRate(sampleRate);
+    masterFxRack.prepare(sampleRate, samplesPerBlockExpected);
 
     const juce::ScopedLock sl(audioLock);
     for (auto& v : voices)
@@ -215,6 +216,7 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 void AudioEngine::releaseResources()
 {
     metronome.releaseResources();
+    masterFxRack.reset();
     const juce::ScopedLock sl(audioLock);
     for (auto& v : voices)
     {
@@ -308,6 +310,9 @@ void AudioEngine::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
         if (voice.position >= voice.sourceBuffer->getNumSamples())
             voice.isActive = false;
     }
+
+    // 3. Master FX Rack: Filter -> Delay -> Reverb
+    masterFxRack.processBlock(*outBuffer, bufferToFill.startSample, bufferToFill.numSamples, metronome.getBpm());
 }
 
 int AudioEngine::findSampleHandle(const juce::String& identifier) const

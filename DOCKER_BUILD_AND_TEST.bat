@@ -1,7 +1,7 @@
 @echo off
-title K3N Armoni Composer - Docker Isolated Build & Test
+title Armoni Composer - Docker Isolated Build & Test
 echo =======================================================
-echo   K3N ARMONI COMPOSER - DOCKER ISOLATED TEST RUNNER
+echo   ARMONI COMPOSER - DOCKER ISOLATED TEST RUNNER
 echo =======================================================
 echo.
 

@@ -19,6 +19,7 @@
 #include <algorithm>
 #include "MetronomeClock.h"
 #include "BpmQuantizer.h"
+#include "DspFxRack.h"
 
 
 class AudioEngine;
@@ -136,6 +137,7 @@ public:
     // BPM & Clock access
     MetronomeClock& getMetronome() { return metronome; }
     BpmQuantizer&   getQuantizer() { return quantizer; }
+    DspFxRack&      getMasterFxRack() { return masterFxRack; }
     void setTempo(double bpm);
 
     static constexpr int maxVoices = 32;
@@ -151,6 +153,7 @@ private:
 
     MetronomeClock metronome;
     BpmQuantizer   quantizer;
+    DspFxRack      masterFxRack;
 
     // Procedural click buffers for the metronome (generated once)
     std::unique_ptr<juce::AudioBuffer<float>> clickDownbeatBuffer;

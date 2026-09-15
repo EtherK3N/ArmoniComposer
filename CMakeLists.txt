@@ -44,6 +44,7 @@ target_sources(ArmoniComposer PRIVATE
     Source/MetronomeClock.cpp
     Source/BpmQuantizer.cpp
     Source/ShiftLayerSystem.cpp
+    Source/DspFxRack.cpp
     Source/MappingEditorComponent.cpp
     Source/PerformanceViewComponent.cpp
 )
@@ -99,6 +100,7 @@ target_sources(ArmoniComposer_Tests PRIVATE
     Source/MetronomeClock.cpp
     Source/BpmQuantizer.cpp
     Source/ShiftLayerSystem.cpp
+    Source/DspFxRack.cpp
 )
 
 target_include_directories(ArmoniComposer_Tests PRIVATE

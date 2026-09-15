@@ -18,6 +18,7 @@
 #include "../Source/MappingEngine.h"
 #include "../Source/DeviceManager.h"
 #include "../Source/ShiftLayerSystem.h"
+#include "../Source/DspFxRack.h"
 
 // Simple lightweight test harness
 #define RUN_TEST(fn) \
@@ -361,11 +362,88 @@ void testLoopTrackEventEditingAndParamLocks()
     assert(track.recordedEvents.size() == 3 && "Track must have 3 events after removal");
 }
 
+void testDspFxRackProcessing()
+{
+    // 1. ResonantFilter SVF Test: Low-Pass frequency attenuation
+    ResonantFilter filter;
+    filter.prepare(44100.0);
+    filter.setMode(FilterMode::LowPass);
+    filter.setCutoff(500.0f);
+    filter.setResonance(1.0f);
+
+    const int numSamples = 512;
+    juce::AudioBuffer<float> testBuf(2, numSamples);
+    float highFreqMagBefore = 0.0f;
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float sample = std::sin(2.0f * juce::MathConstants<float>::pi * 10000.0f * static_cast<float>(i) / 44100.0f);
+        testBuf.setSample(0, i, sample);
+        testBuf.setSample(1, i, sample);
+        highFreqMagBefore += std::abs(sample);
+    }
+
+    filter.processBlock(testBuf, 0, numSamples);
+
+    float highFreqMagAfter = 0.0f;
+    for (int i = 0; i < numSamples; ++i)
+    {
+        highFreqMagAfter += std::abs(testBuf.getSample(0, i));
+    }
+
+    // 10 kHz wave passing through 500 Hz low-pass filter must be strongly attenuated
+    assert(highFreqMagAfter < (highFreqMagBefore * 0.1f) && "10kHz tone must be attenuated by 500Hz LowPass filter");
+
+    // 2. StereoDelay Test: verifies delay echo timing
+    StereoDelay delay;
+    delay.prepare(44100.0, 512);
+    delay.setDivision(DelayDivision::Quarter);
+    delay.setFeedback(0.0f);
+    delay.setMix(1.0f); // 100% wet
+
+    const int delaySamplesExpected = 22050; // 0.5s at 120 BPM
+    juce::AudioBuffer<float> impulseBuf(2, delaySamplesExpected + 512);
+    impulseBuf.clear();
+    impulseBuf.setSample(0, 0, 1.0f);
+
+    int processed = 0;
+    while (processed < impulseBuf.getNumSamples())
+    {
+        int toProc = std::min(512, impulseBuf.getNumSamples() - processed);
+        delay.processBlock(impulseBuf, processed, toProc, 120.0);
+        processed += toProc;
+    }
+
+    float echoSample = impulseBuf.getSample(0, delaySamplesExpected);
+    assert(std::abs(echoSample) > 0.5f && "Echo must arrive at expected 1/4 beat delay time");
+
+    // 3. AlgorithmicReverb Test: verifies decay and numerical stability
+    AlgorithmicReverb reverb;
+    reverb.prepare(44100.0);
+    reverb.setRoomSize(0.6f);
+    reverb.setMix(0.5f);
+
+    juce::AudioBuffer<float> reverbBuf(2, 4096);
+    reverbBuf.clear();
+    reverbBuf.setSample(0, 0, 1.0f);
+    reverbBuf.setSample(1, 0, 1.0f);
+
+    reverb.processBlock(reverbBuf, 0, 4096);
+
+    float tailEnergy = 0.0f;
+    for (int i = 1000; i < 4096; ++i)
+    {
+        float s = reverbBuf.getSample(0, i);
+        assert(! std::isnan(s) && ! std::isinf(s) && "Reverb output must be finite");
+        tailEnergy += std::abs(s);
+    }
+    assert(tailEnergy > 0.001f && "Reverb tail must have audible diffuse energy");
+}
+
 int main(int argc, char* argv[])
 {
     juce::ignoreUnused(argc, argv);
     std::cout << "\n=======================================================\n";
-    std::cout << "  K3N ARMONI COMPOSER - AUTOMATED TEST SUITE\n";
+    std::cout << "  ARMONI COMPOSER - AUTOMATED TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
     RUN_TEST(testAudioEngineProceduralKitAndVoices);
@@ -376,9 +454,10 @@ int main(int argc, char* argv[])
     RUN_TEST(testShiftLayerSystemBankAndModifiers);
     RUN_TEST(testBankAwareMappingEngine);
     RUN_TEST(testLoopTrackEventEditingAndParamLocks);
+    RUN_TEST(testDspFxRackProcessing);
 
     std::cout << "\n=======================================================\n";
-    std::cout << "  ALL 8 TEST SUITES PASSED! (100% Core Integrity)\n";
+    std::cout << "  ALL 9 TEST SUITES PASSED! (100% Core & DSP Integrity)\n";
     std::cout << "=======================================================\n\n";
     return 0;
 }

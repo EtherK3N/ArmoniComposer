@@ -34,7 +34,7 @@ COPY . /workspace
 
 # Configure and Build
 RUN cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
-RUN cmake --build build --config Release --target LoopStation_Tests
+RUN cmake --build build --config Release --target ArmoniComposer_Tests
 
 # Run Automated Test Suite on Container Startup
-CMD ["/workspace/build/LoopStation_Tests_artefacts/Release/LoopStation_Tests"]
+CMD ["/workspace/build/ArmoniComposer_Tests_artefacts/Release/ArmoniComposer_Tests"]
