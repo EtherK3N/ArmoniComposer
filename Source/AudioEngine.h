@@ -20,7 +20,7 @@
 #include "MetronomeClock.h"
 #include "BpmQuantizer.h"
 #include "DspFxRack.h"
-
+#include "MidiSyncEngine.h"
 
 class AudioEngine;
 
@@ -125,6 +125,15 @@ public:
     /** Finds cached sample handle for an absolute path or memory identifier. Returns -1 if not found. */
     int findSampleHandle(const juce::String& identifier) const;
 
+    /** Returns pointer to cached sample buffer, or nullptr if invalid handle. */
+    const juce::AudioBuffer<float>* getSampleBuffer(int handle) const;
+
+    /** Returns cached identifier/path for sample handle. */
+    juce::String getSampleIdentifier(int handle) const;
+
+    /** Returns total number of cached sample buffers. */
+    int getNumLoadedSamples() const;
+
     /** Instant real-time safe sample triggering. */
     void triggerSample(int sampleHandle, float gain = 1.0f);
 
@@ -138,6 +147,8 @@ public:
     MetronomeClock& getMetronome() { return metronome; }
     BpmQuantizer&   getQuantizer() { return quantizer; }
     DspFxRack&      getMasterFxRack() { return masterFxRack; }
+    MidiSyncEngine& getMidiSyncEngine() { return midiSync; }
+    const MidiSyncEngine& getMidiSyncEngine() const { return midiSync; }
     void setTempo(double bpm);
 
     static constexpr int maxVoices = 32;
@@ -147,6 +158,7 @@ private:
     juce::AudioFormatManager formatManager;
     juce::OwnedArray<juce::AudioBuffer<float>> loadedSamples;
     std::unordered_map<std::string, int> samplePathToHandle;
+    juce::StringArray sampleIdentifiers;
 
     std::array<SamplerVoice, maxVoices> voices;
     juce::Array<LoopTrack*> activeLoopTracks;
@@ -154,6 +166,7 @@ private:
     MetronomeClock metronome;
     BpmQuantizer   quantizer;
     DspFxRack      masterFxRack;
+    MidiSyncEngine midiSync;
 
     // Procedural click buffers for the metronome (generated once)
     std::unique_ptr<juce::AudioBuffer<float>> clickDownbeatBuffer;

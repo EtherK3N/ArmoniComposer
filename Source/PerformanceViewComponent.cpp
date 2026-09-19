@@ -1,4 +1,6 @@
 #include "PerformanceViewComponent.h"
+#include "StemExporter.h"
+#include "MidiExporter.h"
 
 namespace
 {
@@ -55,6 +57,13 @@ PerformanceViewComponent::PerformanceViewComponent(AudioEngine& audioEngine, Map
     addAndMakeVisible(hudOctaveLabel);
     addAndMakeVisible(numpadModeToggle);
 
+    addAndMakeVisible(exportStemsButton);
+    addAndMakeVisible(exportMidiButton);
+    addAndMakeVisible(exportStatusLabel);
+    exportStemsButton.addListener(this);
+    exportMidiButton.addListener(this);
+    exportStatusLabel.setColour(juce::Label::textColourId, juce::Colours::lightgreen);
+
     numpadModeToggle.onClick = [this]
     {
         shiftLayers.setNumpadModeEnabled(numpadModeToggle.getToggleState());
@@ -101,6 +110,12 @@ void PerformanceViewComponent::resized()
         row->clearButton.setBounds(rowArea.removeFromLeft(95).reduced(4));
         area.removeFromTop(8);
     }
+
+    area.removeFromTop(8);
+    auto exportArea = area.removeFromTop(32);
+    exportStemsButton.setBounds(exportArea.removeFromLeft(170).reduced(2));
+    exportMidiButton.setBounds(exportArea.removeFromLeft(170).reduced(2));
+    exportStatusLabel.setBounds(exportArea.reduced(2));
 }
 
 PerformanceViewComponent::TrackRow* PerformanceViewComponent::findRow(KeyboardRole role)
@@ -113,6 +128,17 @@ PerformanceViewComponent::TrackRow* PerformanceViewComponent::findRow(KeyboardRo
 
 void PerformanceViewComponent::buttonClicked(juce::Button* b)
 {
+    if (b == &exportStemsButton)
+    {
+        exportStems();
+        return;
+    }
+    if (b == &exportMidiButton)
+    {
+        exportMidi();
+        return;
+    }
+
     for (auto* row : tracks)
     {
         if (b == &row->recordButton)
@@ -234,3 +260,81 @@ void PerformanceViewComponent::handleKeyEvent(const RawKeyEvent& event, Keyboard
         }
     }
 }
+
+void PerformanceViewComponent::exportStems()
+{
+    juce::Array<const LoopTrack*> loopTracks;
+    juce::StringArray trackNames;
+
+    for (const auto* row : tracks)
+    {
+        if (row != nullptr)
+        {
+            loopTracks.add(&row->track);
+            trackNames.add(row->label);
+        }
+    }
+
+    const auto docsDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    const auto targetDir = docsDir.getChildFile("ArmoniComposer").getChildFile("Stems");
+
+    StemExportOptions options;
+    options.outputDirectory = targetDir;
+    options.sampleRate = audio.getSampleRate();
+    options.bitDepth = 24;
+    options.exportIndividualStems = true;
+    options.exportMasterMix = true;
+    options.normalize = true;
+
+    const auto result = StemExporter::renderStems(audio, loopTracks, trackNames, options);
+    if (result.success)
+    {
+        exportStatusLabel.setColour(juce::Label::textColourId, juce::Colours::lightgreen);
+        exportStatusLabel.setText("Stems exported: " + juce::String(result.exportedFiles.size()) + " files to " + targetDir.getFileName(),
+                                  juce::dontSendNotification);
+    }
+    else
+    {
+        exportStatusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+        exportStatusLabel.setText("Stem export notice: " + result.errorMessage, juce::dontSendNotification);
+    }
+}
+
+void PerformanceViewComponent::exportMidi()
+{
+    juce::Array<const LoopTrack*> loopTracks;
+    juce::StringArray trackNames;
+
+    for (const auto* row : tracks)
+    {
+        if (row != nullptr)
+        {
+            loopTracks.add(&row->track);
+            trackNames.add(row->label);
+        }
+    }
+
+    const auto docsDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    const auto targetFile = docsDir.getChildFile("ArmoniComposer").getChildFile("ArmoniSession.mid");
+
+    MidiExportOptions options;
+    options.sampleRate = audio.getSampleRate();
+    options.bpm = audio.getMetronome().getTempo();
+    options.timeSignatureNumerator = audio.getMetronome().getTimeSignatureNumerator();
+    options.timeSignatureDenominator = audio.getMetronome().getTimeSignatureDenominator();
+    options.ticksPerQuarterNote = 960;
+
+    const auto result = MidiExporter::exportToFile(loopTracks, trackNames, targetFile, options, &audio);
+    if (result.success)
+    {
+        exportStatusLabel.setColour(juce::Label::textColourId, juce::Colours::lightgreen);
+        exportStatusLabel.setText("MIDI exported: " + juce::String(result.totalNotesExported) + " notes (" + juce::String(result.totalTracksExported) + " tracks)",
+                                  juce::dontSendNotification);
+    }
+    else
+    {
+        exportStatusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+        exportStatusLabel.setText("MIDI export notice: " + result.errorMessage, juce::dontSendNotification);
+    }
+}
+

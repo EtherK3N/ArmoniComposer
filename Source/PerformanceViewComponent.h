@@ -51,6 +51,8 @@ private:
     void timerCallback() override;
     void updateStatusLabels();
     TrackRow* findRow(KeyboardRole role);
+    void exportStems();
+    void exportMidi();
 
     AudioEngine& audio;
     MappingEngine& mapping;
@@ -62,6 +64,10 @@ private:
     juce::Label hudBankLabel;
     juce::Label hudOctaveLabel;
     juce::ToggleButton numpadModeToggle { "Numpad 3x4 Matrix" };
+
+    juce::TextButton exportStemsButton { "Export Stems (WAV)" };
+    juce::TextButton exportMidiButton { "Export MIDI (.mid)" };
+    juce::Label exportStatusLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PerformanceViewComponent)
 };

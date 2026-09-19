@@ -53,9 +53,9 @@ The core architecture and low-level technical foundations are implemented. The i
 **Goal**: Professional studio-quality sound shaping on every track.
 
 ### Per-Lane FX Rack (Native C++)
-- [ ] Multi-mode resonant filter — Low-Pass, High-Pass, Band-Pass with Q control per lane
-- [ ] Stereo ping-pong delay — tempo-synced with feedback damping
-- [ ] Algorithmic reverb — Schroeder/Freeverb implementation
+- [x] Multi-mode resonant filter — Low-Pass, High-Pass, Band-Pass with Q control per lane (`ResonantFilter`)
+- [x] Stereo ping-pong delay — tempo-synced with feedback damping (`StereoDelay`)
+- [x] Algorithmic reverb — Schroeder/Freeverb core with zero audio-thread allocation (`AlgorithmicReverb`)
 - [ ] 3-band parametric EQ — Low Shelf, Mid Bell, High Shelf
 
 ### Pitch & Time
@@ -70,9 +70,9 @@ The core architecture and low-level technical foundations are implemented. The i
 **Goal**: Move from live performance into a full creative production workflow.
 
 ### Export
-- [ ] Multitrack stem export — bounce all loop lanes as synchronized 24-bit WAV/FLAC
-- [ ] MIDI file export (`.mid`) — recorded trigger patterns as standard MIDI sequences
-- [ ] Virtual MIDI output — send live notes to external DAWs and software synths
+- [x] Multitrack stem export — bounce all loop lanes as synchronized 24-bit WAV stems (`StemExporter`)
+- [x] MIDI file export (`.mid`) — recorded trigger patterns as standard MIDI sequences (`MidiExporter`)
+- [x] Virtual MIDI output & MIDI Clock — send 24 PPQN real-time clock to external DAWs and synths (`MidiSyncEngine`)
 
 ### Sync
 - [ ] Ableton Link integration — wireless tempo sync with other devices on local network

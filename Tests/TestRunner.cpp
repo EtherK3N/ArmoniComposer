@@ -19,6 +19,9 @@
 #include "../Source/DeviceManager.h"
 #include "../Source/ShiftLayerSystem.h"
 #include "../Source/DspFxRack.h"
+#include "../Source/StemExporter.h"
+#include "../Source/MidiExporter.h"
+#include "../Source/MidiSyncEngine.h"
 
 // Simple lightweight test harness
 #define RUN_TEST(fn) \
@@ -439,6 +442,143 @@ void testDspFxRackProcessing()
     assert(tailEnergy > 0.001f && "Reverb tail must have audible diffuse energy");
 }
 
+void testStemExporterWavGeneration()
+{
+    AudioEngine engine;
+    engine.prepareToPlay(512, 44100.0);
+
+    const int kickHandle = engine.findSampleHandle("starter://kick");
+    const int snareHandle = engine.findSampleHandle("starter://snare");
+    const int bassHandle = engine.findSampleHandle("starter://bass808");
+    assert(kickHandle >= 0 && snareHandle >= 0 && bassHandle >= 0);
+
+    LoopTrack drumTrack;
+    drumTrack.startRecording();
+    drumTrack.recordTrigger(kickHandle, 0);
+    drumTrack.recordTrigger(snareHandle, 22050);
+    drumTrack.stopRecordingAndStartLoop();
+
+    LoopTrack bassTrack;
+    bassTrack.startRecording();
+    bassTrack.recordTrigger(bassHandle, 0);
+    bassTrack.stopRecordingAndStartLoop();
+
+    juce::Array<const LoopTrack*> tracks { &drumTrack, &bassTrack };
+    juce::StringArray names { "Drums", "Bass" };
+
+    const juce::File tempDir = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                  .getChildFile("ArmoniTestStems_" + juce::String(juce::Random().nextInt()));
+
+    StemExportOptions options;
+    options.outputDirectory = tempDir;
+    options.sampleRate = 44100.0;
+    options.bitDepth = 24;
+    options.exportIndividualStems = true;
+    options.exportMasterMix = true;
+    options.normalize = false;
+
+    const auto result = StemExporter::renderStems(engine, tracks, names, options);
+    assert(result.success && "Stem export must succeed");
+    assert(result.exportedFiles.size() == 3 && "Must export 2 stems + 1 master mix");
+    assert(result.totalSamplesRendered > 20000 && "Rendered length must match loop events");
+
+    for (const auto& f : result.exportedFiles)
+    {
+        assert(f.existsAsFile() && f.getSize() > 100 && "Exported file must exist and have content");
+    }
+
+    // Verify WAV format integrity
+    juce::AudioFormatManager fm;
+    fm.registerBasicFormats();
+    std::unique_ptr<juce::AudioFormatReader> reader(fm.createReaderFor(result.exportedFiles[0]));
+    assert(reader != nullptr && "Exported WAV must be readable by AudioFormatReader");
+    assert(reader->sampleRate == 44100.0 && "Sample rate must match export option");
+    assert(reader->numChannels == 2 && "Stems must be stereo");
+    assert(reader->bitsPerSample == 24 && "Bit depth must match 24-bit option");
+
+    tempDir.deleteRecursively();
+    engine.releaseResources();
+}
+
+void testMidiExporterFileGeneration()
+{
+    AudioEngine engine;
+    engine.prepareToPlay(512, 44100.0);
+
+    const int kickHandle = engine.findSampleHandle("starter://kick");
+    const int snareHandle = engine.findSampleHandle("starter://snare");
+    const int bassHandle = engine.findSampleHandle("starter://bass808");
+
+    LoopTrack drumTrack;
+    drumTrack.startRecording();
+    drumTrack.recordTrigger(kickHandle, 0);
+    drumTrack.recordTrigger(snareHandle, 22050);
+    drumTrack.stopRecordingAndStartLoop();
+
+    LoopTrack bassTrack;
+    bassTrack.startRecording();
+    bassTrack.recordTrigger(bassHandle, 11025);
+    bassTrack.setEventParams(0, 1.0f, 7.0f); // transposed by +7 semitones
+    bassTrack.stopRecordingAndStartLoop();
+
+    juce::Array<const LoopTrack*> tracks { &drumTrack, &bassTrack };
+    juce::StringArray names { "Drums Track", "Bass Track" };
+
+    const juce::File tempMidi = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                    .getChildFile("ArmoniTest_" + juce::String(juce::Random().nextInt()) + ".mid");
+
+    MidiExportOptions options;
+    options.sampleRate = 44100.0;
+    options.bpm = 120.0;
+    options.ticksPerQuarterNote = 960;
+
+    const auto result = MidiExporter::exportToFile(tracks, names, tempMidi, options, &engine);
+    assert(result.success && "MIDI export must succeed");
+    assert(result.totalNotesExported == 3 && "Must export 3 note triggers");
+    assert(result.totalTracksExported == 2 && "Must export 2 instrument tracks");
+    assert(tempMidi.existsAsFile() && tempMidi.getSize() > 50 && "MIDI file must exist on disk");
+
+    // Read MIDI file back to verify structure
+    juce::MidiFile midiIn;
+    juce::FileInputStream fis(tempMidi);
+    assert(fis.openedOk() && midiIn.readFrom(fis) && "MIDI file must be valid Standard MIDI format");
+    assert(midiIn.getNumTracks() >= 3 && "Must contain Conductor track + 2 instrument tracks");
+    assert(midiIn.getTimeFormat() == 960 && "Ticks per quarter note must match 960 PPQN");
+
+    tempMidi.deleteFile();
+    engine.releaseResources();
+}
+
+void testMidiSyncEngineClockPulses()
+{
+    MidiSyncEngine sync;
+    sync.prepare(44100.0, 120.0); // 120 BPM: 1 beat = 0.5s = 22050 samples
+    sync.setClockEnabled(true);
+    sync.sendStart();
+
+    int clockCount = 0;
+    auto clockCallback = [&](const juce::MidiMessage& msg)
+    {
+        if (msg.getRawData()[0] == 0xF8)
+            clockCount++;
+    };
+
+    int samplesRemaining = 22050;
+    while (samplesRemaining > 0)
+    {
+        const int blockSize = std::min(512, samplesRemaining);
+        sync.processBlock(blockSize, clockCallback);
+        samplesRemaining -= blockSize;
+    }
+
+    assert(clockCount == 24 && "MIDI sync engine must emit exactly 24 pulses per quarter note (24 PPQN)");
+
+    sync.sendStop();
+    clockCount = 0;
+    sync.processBlock(512, clockCallback);
+    assert(clockCount == 0 && "Stopped MIDI sync engine must not emit clock pulses");
+}
+
 int main(int argc, char* argv[])
 {
     juce::ignoreUnused(argc, argv);
@@ -455,9 +595,12 @@ int main(int argc, char* argv[])
     RUN_TEST(testBankAwareMappingEngine);
     RUN_TEST(testLoopTrackEventEditingAndParamLocks);
     RUN_TEST(testDspFxRackProcessing);
+    RUN_TEST(testStemExporterWavGeneration);
+    RUN_TEST(testMidiExporterFileGeneration);
+    RUN_TEST(testMidiSyncEngineClockPulses);
 
     std::cout << "\n=======================================================\n";
-    std::cout << "  ALL 9 TEST SUITES PASSED! (100% Core & DSP Integrity)\n";
+    std::cout << "  ALL 12 TEST SUITES PASSED! (100% Core, DSP & Studio Export)\n";
     std::cout << "=======================================================\n\n";
     return 0;
 }

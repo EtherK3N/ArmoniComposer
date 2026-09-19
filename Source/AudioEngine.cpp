@@ -202,6 +202,7 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
     metronome.prepareToPlay(sampleRate, samplesPerBlockExpected);
     quantizer.setSampleRate(sampleRate);
     masterFxRack.prepare(sampleRate, samplesPerBlockExpected);
+    midiSync.prepare(sampleRate, metronome.getTempo());
 
     const juce::ScopedLock sl(audioLock);
     for (auto& v : voices)
@@ -278,6 +279,12 @@ void AudioEngine::getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferTo
             track->processAudioBlock(bufferToFill.numSamples, *this);
     }
 
+    // 1b. Process MIDI clock output sync
+    midiSync.processBlock(bufferToFill.numSamples, [this](const juce::MidiMessage& msg)
+    {
+        midiSync.sendMessage(msg);
+    });
+
     // 2. Mix active voices into the destination buffer
     auto* outBuffer = bufferToFill.buffer;
     const int numOutChannels = outBuffer->getNumChannels();
@@ -329,6 +336,7 @@ int AudioEngine::addMemoryBuffer(std::unique_ptr<juce::AudioBuffer<float>> buffe
     loadedSamples.add(buffer.release());
     const int handle = loadedSamples.size() - 1;
     samplePathToHandle[identifier.toStdString()] = handle;
+    sampleIdentifiers.add(identifier);
     return handle;
 }
 
@@ -356,7 +364,30 @@ int AudioEngine::loadSample(const juce::File& audioFile)
     loadedSamples.add(buffer.release());
     const int handle = loadedSamples.size() - 1;
     samplePathToHandle[pathStr] = handle;
+    sampleIdentifiers.add(audioFile.getFileNameWithoutExtension());
     return handle;
+}
+
+const juce::AudioBuffer<float>* AudioEngine::getSampleBuffer(int handle) const
+{
+    const juce::ScopedLock sl(audioLock);
+    if (handle >= 0 && handle < loadedSamples.size())
+        return loadedSamples[handle];
+    return nullptr;
+}
+
+juce::String AudioEngine::getSampleIdentifier(int handle) const
+{
+    const juce::ScopedLock sl(audioLock);
+    if (handle >= 0 && handle < sampleIdentifiers.size())
+        return sampleIdentifiers[handle];
+    return {};
+}
+
+int AudioEngine::getNumLoadedSamples() const
+{
+    const juce::ScopedLock sl(audioLock);
+    return loadedSamples.size();
 }
 
 void AudioEngine::generateDefaultStarterKit()
@@ -504,6 +535,7 @@ void AudioEngine::setTempo(double bpm)
 {
     metronome.setTempo(bpm);
     quantizer.setTempo(bpm);
+    midiSync.setTempo(bpm);
 }
 
 void AudioEngine::generateClickBuffers()
