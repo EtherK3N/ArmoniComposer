@@ -320,6 +320,7 @@ DspFxRack::DspFxRack() = default;
 
 void DspFxRack::prepare(double sampleRate, int maxBlockSize)
 {
+    equalizer.prepare(sampleRate);
     filter.prepare(sampleRate);
     delay.prepare(sampleRate, maxBlockSize);
     reverb.prepare(sampleRate);
@@ -327,6 +328,7 @@ void DspFxRack::prepare(double sampleRate, int maxBlockSize)
 
 void DspFxRack::reset()
 {
+    equalizer.reset();
     filter.reset();
     delay.reset();
     reverb.reset();
@@ -337,7 +339,8 @@ void DspFxRack::processBlock(juce::AudioBuffer<float>& buffer, int startSample, 
     if (masterBypass.load(std::memory_order_relaxed))
         return;
 
-    // Signal Flow: Filter -> Delay -> Reverb
+    // Signal Flow: Equalizer -> Filter -> Delay -> Reverb
+    equalizer.processBlock(buffer, startSample, numSamples);
     filter.processBlock(buffer, startSample, numSamples);
     delay.processBlock(buffer, startSample, numSamples, currentBpm);
     reverb.processBlock(buffer, startSample, numSamples);

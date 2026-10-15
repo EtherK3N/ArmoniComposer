@@ -56,7 +56,7 @@ The core architecture and low-level technical foundations are implemented. The i
 - [x] Multi-mode resonant filter — Low-Pass, High-Pass, Band-Pass with Q control per lane (`ResonantFilter`)
 - [x] Stereo ping-pong delay — tempo-synced with feedback damping (`StereoDelay`)
 - [x] Algorithmic reverb — Schroeder/Freeverb core with zero audio-thread allocation (`AlgorithmicReverb`)
-- [ ] 3-band parametric EQ — Low Shelf, Mid Bell, High Shelf
+- [x] 3-band parametric EQ — Low Shelf, Mid Bell, High Shelf with Audio EQ Cookbook biquad filters in Direct Form II Transposed (ParametricEQ)
 
 ### Pitch & Time
 - [ ] Real-time sample resampler using `juce::LagrangeInterpolator`

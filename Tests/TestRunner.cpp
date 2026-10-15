@@ -19,6 +19,7 @@
 #include "../Source/DeviceManager.h"
 #include "../Source/ShiftLayerSystem.h"
 #include "../Source/DspFxRack.h"
+#include "../Source/ParametricEQ.h"
 #include "../Source/StemExporter.h"
 #include "../Source/MidiExporter.h"
 #include "../Source/MidiSyncEngine.h"
@@ -579,6 +580,97 @@ void testMidiSyncEngineClockPulses()
     assert(clockCount == 0 && "Stopped MIDI sync engine must not emit clock pulses");
 }
 
+void testParametricEqualizer()
+{
+    ParametricEQ eq;
+    eq.prepare(44100.0);
+
+    const int numSamples = 512;
+    juce::AudioBuffer<float> buffer(2, numSamples);
+
+    // 1. Flat EQ (0 dB) test: signal must remain unchanged (within float epsilon)
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float s = std::sin(2.0f * juce::MathConstants<float>::pi * 440.0f * static_cast<float>(i) / 44100.0f);
+        buffer.setSample(0, i, s);
+        buffer.setSample(1, i, s);
+    }
+    eq.processBlock(buffer, 0, numSamples);
+    for (int i = 20; i < numSamples; ++i)
+    {
+        float orig = std::sin(2.0f * juce::MathConstants<float>::pi * 440.0f * static_cast<float>(i) / 44100.0f);
+        assert(std::abs(buffer.getSample(0, i) - orig) < 1.0e-3f && "Flat EQ must pass signal transparently");
+    }
+
+    // 2. Low Shelf Boost test: 60 Hz tone with +12 dB boost
+    eq.reset();
+    eq.setLowShelf(150.0f, 12.0f);
+    juce::AudioBuffer<float> lowBoostBuf(2, numSamples);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float s = std::sin(2.0f * juce::MathConstants<float>::pi * 60.0f * static_cast<float>(i) / 44100.0f);
+        lowBoostBuf.setSample(0, i, s);
+        lowBoostBuf.setSample(1, i, s);
+    }
+    eq.processBlock(lowBoostBuf, 0, numSamples);
+    float lowEnergyAfter = 0.0f;
+    float lowEnergyBefore = 0.0f;
+    for (int i = 50; i < numSamples; ++i)
+    {
+        lowEnergyAfter += std::abs(lowBoostBuf.getSample(0, i));
+        lowEnergyBefore += std::abs(std::sin(2.0f * juce::MathConstants<float>::pi * 60.0f * static_cast<float>(i) / 44100.0f));
+    }
+    assert(lowEnergyAfter > lowEnergyBefore * 2.0f && "Low shelf +12dB must significantly boost 60Hz sub-bass");
+
+    // 3. High Shelf Attenuation test: 14 kHz tone with -18 dB cut
+    eq.reset();
+    eq.setLowShelf(100.0f, 0.0f);
+    eq.setHighShelf(6000.0f, -18.0f);
+    juce::AudioBuffer<float> highCutBuf(2, numSamples);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float s = std::sin(2.0f * juce::MathConstants<float>::pi * 14000.0f * static_cast<float>(i) / 44100.0f);
+        highCutBuf.setSample(0, i, s);
+        highCutBuf.setSample(1, i, s);
+    }
+    eq.processBlock(highCutBuf, 0, numSamples);
+    float highCutAfter = 0.0f;
+    float highCutBefore = 0.0f;
+    for (int i = 50; i < numSamples; ++i)
+    {
+        highCutAfter += std::abs(highCutBuf.getSample(0, i));
+        highCutBefore += std::abs(std::sin(2.0f * juce::MathConstants<float>::pi * 14000.0f * static_cast<float>(i) / 44100.0f));
+    }
+    assert(highCutAfter < highCutBefore * 0.35f && "High shelf -18dB must attenuate 14kHz treble");
+
+    // 4. Mid Peaking Bell Boost test: 1 kHz tone with +12 dB boost, Q=2.0
+    eq.reset();
+    eq.setHighShelf(8000.0f, 0.0f);
+    eq.setMidBand(1000.0f, 2.0f, 12.0f);
+    juce::AudioBuffer<float> midBuf(2, numSamples);
+    for (int i = 0; i < numSamples; ++i)
+    {
+        float s = std::sin(2.0f * juce::MathConstants<float>::pi * 1000.0f * static_cast<float>(i) / 44100.0f);
+        midBuf.setSample(0, i, s);
+        midBuf.setSample(1, i, s);
+    }
+    eq.processBlock(midBuf, 0, numSamples);
+    float midAfter = 0.0f;
+    float midBefore = 0.0f;
+    for (int i = 50; i < numSamples; ++i)
+    {
+        midAfter += std::abs(midBuf.getSample(0, i));
+        midBefore += std::abs(std::sin(2.0f * juce::MathConstants<float>::pi * 1000.0f * static_cast<float>(i) / 44100.0f));
+    }
+    assert(midAfter > midBefore * 2.0f && "Mid bell +12dB at 1kHz must amplify 1kHz tone");
+
+    // 5. Integration into DspFxRack
+    DspFxRack rack;
+    rack.prepare(44100.0, 512);
+    rack.getEqualizer().setLowShelf(100.0f, 6.0f);
+    assert(rack.getEqualizer().getLowShelfGain() == 6.0f && "DspFxRack must correctly expose ParametricEQ controls");
+}
+
 int main(int argc, char* argv[])
 {
     juce::ignoreUnused(argc, argv);
@@ -595,12 +687,13 @@ int main(int argc, char* argv[])
     RUN_TEST(testBankAwareMappingEngine);
     RUN_TEST(testLoopTrackEventEditingAndParamLocks);
     RUN_TEST(testDspFxRackProcessing);
+    RUN_TEST(testParametricEqualizer);
     RUN_TEST(testStemExporterWavGeneration);
     RUN_TEST(testMidiExporterFileGeneration);
     RUN_TEST(testMidiSyncEngineClockPulses);
 
     std::cout << "\n=======================================================\n";
-    std::cout << "  ALL 12 TEST SUITES PASSED! (100% Core, DSP & Studio Export)\n";
+    std::cout << "  ALL 13 TEST SUITES PASSED! (100% Core, DSP Parametric EQ & Studio Export) (100% Core, DSP & Studio Export)\n";
     std::cout << "=======================================================\n\n";
     return 0;
 }

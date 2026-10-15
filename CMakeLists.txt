@@ -45,6 +45,7 @@ target_sources(ArmoniComposer PRIVATE
     Source/BpmQuantizer.cpp
     Source/ShiftLayerSystem.cpp
     Source/DspFxRack.cpp
+    Source/ParametricEQ.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp
@@ -104,6 +105,7 @@ target_sources(ArmoniComposer_Tests PRIVATE
     Source/BpmQuantizer.cpp
     Source/ShiftLayerSystem.cpp
     Source/DspFxRack.cpp
+    Source/ParametricEQ.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp

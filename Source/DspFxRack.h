@@ -13,6 +13,7 @@
 
 #include <juce_core/juce_core.h>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include "ParametricEQ.h"
 #include <array>
 #include <atomic>
 #include <cmath>
@@ -195,6 +196,7 @@ public:
 
     void processBlock(juce::AudioBuffer<float>& buffer, int startSample, int numSamples, double currentBpm);
 
+    ParametricEQ&     getEqualizer() { return equalizer; }
     ResonantFilter&   getFilter() { return filter; }
     StereoDelay&      getDelay()  { return delay; }
     AlgorithmicReverb& getReverb() { return reverb; }
@@ -203,6 +205,7 @@ public:
     bool isMasterBypassed() const     { return masterBypass.load(std::memory_order_relaxed); }
 
 private:
+    ParametricEQ      equalizer;
     ResonantFilter    filter;
     StereoDelay       delay;
     AlgorithmicReverb reverb;
