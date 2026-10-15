@@ -1,3 +1,26 @@
+juce::String RawInputHandler::extractHardwareFingerprint(const DeviceId& devicePath)
+{
+    if (devicePath.isEmpty())
+        return {};
+
+    const auto upper = devicePath.toUpperCase();
+    const int vidIdx = upper.indexOf("VID_");
+    const int pidIdx = upper.indexOf("PID_");
+
+    if (vidIdx >= 0 && pidIdx >= 0)
+    {
+        const juce::String vid = upper.substring(vidIdx, vidIdx + 8);
+        const juce::String pid = upper.substring(pidIdx, pidIdx + 8);
+
+        const int miIdx = upper.indexOf("MI_");
+        const juce::String mi = (miIdx >= 0) ? upper.substring(miIdx, miIdx + 5) : "";
+
+        return vid + ":" + pid + (mi.isNotEmpty() ? (":" + mi) : "");
+    }
+
+    return devicePath;
+}
+
 #include "RawInputHandler.h"
 
 #if JUCE_WINDOWS

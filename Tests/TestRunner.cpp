@@ -20,6 +20,7 @@
 #include "../Source/ShiftLayerSystem.h"
 #include "../Source/DspFxRack.h"
 #include "../Source/ParametricEQ.h"
+#include "../Source/AnalogSynthEngine.h"
 #include "../Source/StemExporter.h"
 #include "../Source/MidiExporter.h"
 #include "../Source/MidiSyncEngine.h"
@@ -671,6 +672,151 @@ void testParametricEqualizer()
     assert(rack.getEqualizer().getLowShelfGain() == 6.0f && "DspFxRack must correctly expose ParametricEQ controls");
 }
 
+void testHardwareFingerprintMatching()
+{
+    const DeviceId pathPort1 = "\\\\?\\HID#VID_046D&PID_C31C&MI_00#7&2b012c4&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}";
+    const DeviceId pathPort2 = "\\\\?\\HID#VID_046D&PID_C31C&MI_00#8&ff9812a&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}";
+    const DeviceId pathDell  = "\\\\?\\HID#VID_413C&PID_2113#1&1122334&0&0000#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}";
+
+    const juce::String fp1 = RawInputHandler::extractHardwareFingerprint(pathPort1);
+    const juce::String fp2 = RawInputHandler::extractHardwareFingerprint(pathPort2);
+    const juce::String fpDell = RawInputHandler::extractHardwareFingerprint(pathDell);
+
+    assert(fp1 == "VID_046D:PID_C31C:MI_00" && "Fingerprint must extract VID, PID, and MI");
+    assert(fp1 == fp2 && "Same keyboard plugged into different USB port must produce identical fingerprint");
+    assert(fp1 != fpDell && "Different keyboards must produce distinct fingerprints");
+}
+
+void testPolyBlepOscillator()
+{
+    PolyBlepOscillator osc;
+    osc.prepare(44100.0);
+    osc.setFrequency(1000.0f); // 1 kHz
+
+    // 1. Saw wave test
+    osc.setWaveform(OscillatorWaveform::Saw);
+    for (int i = 0; i < 200; ++i)
+    {
+        float s = osc.getNextSample();
+        assert(s >= -1.25f && s <= 1.25f && "PolyBLEP saw wave sample must remain bounded");
+    }
+
+    // 2. Pulse wave test with PWM
+    osc.setWaveform(OscillatorWaveform::Pulse);
+    osc.setPulseWidth(0.25f);
+    for (int i = 0; i < 200; ++i)
+    {
+        float s = osc.getNextSample();
+        assert(s >= -1.25f && s <= 1.25f && "PolyBLEP pulse wave sample must remain bounded");
+    }
+
+    // 3. Sine wave test
+    osc.setWaveform(OscillatorWaveform::Sine);
+    for (int i = 0; i < 200; ++i)
+    {
+        float s = osc.getNextSample();
+        assert(std::abs(s) <= 1.001f && "Sine wave must be bounded by [-1, 1]");
+    }
+}
+
+void testMoogLadderFilter()
+{
+    MoogLadderFilter filter;
+    filter.prepare(44100.0);
+    filter.setCutoff(400.0f);
+    filter.setResonance(0.7f);
+
+    // Filter 10 kHz wave: must be strongly attenuated by 4-pole 24dB/oct ladder
+    float energyBefore = 0.0f;
+    float energyAfter = 0.0f;
+    for (int i = 0; i < 512; ++i)
+    {
+        float in = std::sin(2.0f * juce::MathConstants<float>::pi * 10000.0f * static_cast<float>(i) / 44100.0f);
+        energyBefore += std::abs(in);
+        float out = filter.processSample(in, 0);
+        energyAfter += std::abs(out);
+        assert(!std::isnan(out) && !std::isinf(out) && "Moog ladder output must be finite");
+    }
+
+    assert(energyAfter < energyBefore * 0.05f && "4-Pole Moog ladder must attenuate 10kHz by > 26 dB at 400Hz cutoff");
+}
+
+void testAdsrEnvelope()
+{
+    AdsrEnvelope adsr;
+    adsr.prepare(1000.0); // 1000 Hz sample rate for easy timing math (1 sample = 1 ms)
+    adsr.setParameters(0.010f, 0.020f, 0.5f, 0.020f); // A=10ms, D=20ms, S=0.5, R=20ms
+
+    assert(!adsr.isActive());
+
+    adsr.noteOn();
+    assert(adsr.getState() == AdsrState::Attack);
+
+    // Advance 10 ms (10 samples): should reach peak ~1.0
+    for (int i = 0; i < 10; ++i)
+        adsr.getNextSample();
+
+    assert(adsr.getState() == AdsrState::Decay);
+
+    // Advance 20 ms (20 samples): should reach sustain level ~0.5
+    for (int i = 0; i < 20; ++i)
+        adsr.getNextSample();
+
+    assert(adsr.getState() == AdsrState::Sustain);
+    assert(std::abs(adsr.getNextSample() - 0.5f) < 0.02f);
+
+    // Note off -> Release
+    adsr.noteOff();
+    assert(adsr.getState() == AdsrState::Release);
+
+    for (int i = 0; i < 25; ++i)
+        adsr.getNextSample();
+
+    assert(!adsr.isActive());
+    assert(adsr.getState() == AdsrState::Idle);
+}
+
+void testAnalogSynthEnginePolyphony()
+{
+    AnalogSynthEngine synth;
+    synth.prepare(44100.0);
+    synth.setWaveform(OscillatorWaveform::Saw);
+    synth.setFilterCutoff(2000.0f);
+    synth.setFilterResonance(0.3f);
+    synth.setAdsr(0.01f, 0.1f, 0.7f, 0.1f);
+
+    // Play 3 notes (C Major triad: C4=60, E4=64, G4=67)
+    synth.noteOn(60, 0.8f);
+    synth.noteOn(64, 0.8f);
+    synth.noteOn(67, 0.8f);
+
+    juce::AudioBuffer<float> buffer(2, 512);
+    buffer.clear();
+    synth.renderBlock(buffer, 0, 512);
+
+    float energy = 0.0f;
+    for (int i = 0; i < 512; ++i)
+        energy += std::abs(buffer.getSample(0, i));
+
+    assert(energy > 5.0f && "Polyphonic synth render must output audible sound for chord");
+
+    // Release all notes
+    synth.allNotesOff();
+    buffer.clear();
+    // After 0.15s (7000 samples) release should complete
+    for (int b = 0; b < 15; ++b)
+    {
+        buffer.clear();
+        synth.renderBlock(buffer, 0, 512);
+    }
+
+    float finalEnergy = 0.0f;
+    for (int i = 0; i < 512; ++i)
+        finalEnergy += std::abs(buffer.getSample(0, i));
+
+    assert(finalEnergy < 0.01f && "Synth voices must fade to silence after release");
+}
+
 int main(int argc, char* argv[])
 {
     juce::ignoreUnused(argc, argv);
@@ -688,12 +834,17 @@ int main(int argc, char* argv[])
     RUN_TEST(testLoopTrackEventEditingAndParamLocks);
     RUN_TEST(testDspFxRackProcessing);
     RUN_TEST(testParametricEqualizer);
+    RUN_TEST(testHardwareFingerprintMatching);
+    RUN_TEST(testPolyBlepOscillator);
+    RUN_TEST(testMoogLadderFilter);
+    RUN_TEST(testAdsrEnvelope);
+    RUN_TEST(testAnalogSynthEnginePolyphony);
     RUN_TEST(testStemExporterWavGeneration);
     RUN_TEST(testMidiExporterFileGeneration);
     RUN_TEST(testMidiSyncEngineClockPulses);
 
     std::cout << "\n=======================================================\n";
-    std::cout << "  ALL 13 TEST SUITES PASSED! (100% Core, DSP Parametric EQ & Studio Export) (100% Core, DSP & Studio Export)\n";
+    std::cout << "  ALL 18 TEST SUITES PASSED! (100% Core, Virtual Analog Synth, Hardware Fingerprint & Studio Export) (100% Core, DSP Parametric EQ & Studio Export) (100% Core, DSP & Studio Export)\n";
     std::cout << "=======================================================\n\n";
     return 0;
 }

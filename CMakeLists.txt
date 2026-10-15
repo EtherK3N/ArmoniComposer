@@ -46,6 +46,7 @@ target_sources(ArmoniComposer PRIVATE
     Source/ShiftLayerSystem.cpp
     Source/DspFxRack.cpp
     Source/ParametricEQ.cpp
+    Source/AnalogSynthEngine.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp
@@ -106,6 +107,7 @@ target_sources(ArmoniComposer_Tests PRIVATE
     Source/ShiftLayerSystem.cpp
     Source/DspFxRack.cpp
     Source/ParametricEQ.cpp
+    Source/AnalogSynthEngine.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp

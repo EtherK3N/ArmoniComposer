@@ -56,6 +56,8 @@ The core architecture and low-level technical foundations are implemented. The i
 - [x] Multi-mode resonant filter — Low-Pass, High-Pass, Band-Pass with Q control per lane (`ResonantFilter`)
 - [x] Stereo ping-pong delay — tempo-synced with feedback damping (`StereoDelay`)
 - [x] Algorithmic reverb — Schroeder/Freeverb core with zero audio-thread allocation (`AlgorithmicReverb`)
+- [x] Virtual Analog Synthesizer Engine — PolyBLEP anti-aliased oscillators (Saw, Pulse/PWM, Triangle, Sine), 4-pole Moog ladder 24 dB/oct resonant filter, exponential ADSR envelope, 8-voice polyphony (`AnalogSynthEngine`)
+- [x] Smart Reconnect — Persistent VID/PID hardware fingerprinting invariant to USB port re-plugging (`RawInputHandler::extractHardwareFingerprint`)
 - [x] 3-band parametric EQ — Low Shelf, Mid Bell, High Shelf with Audio EQ Cookbook biquad filters in Direct Form II Transposed (ParametricEQ)
 
 ### Pitch & Time

@@ -38,6 +38,9 @@ public:
     bool processRawInputMessage(void* lParam);
 
     /** Returns the list of all detected Device IDs. */
+    /** Extracts a persistent hardware fingerprint (VID:PID:MI) invariant to USB port re-plugging. */
+    static juce::String extractHardwareFingerprint(const DeviceId& devicePath);
+
     juce::Array<DeviceId> getKnownDevices() const;
 
     /** Friendly display names assigned by the user to each keyboard. */

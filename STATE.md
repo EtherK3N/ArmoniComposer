@@ -51,6 +51,8 @@ Last Updated: **September 2026**
 ---
 
 ## 🎯 Current Milestone: Phase 3: DSP Sound Sculpting (v0.3.0) - COMPLETED [100%]
+- [x] **AnalogSynthEngine**: 8-voice virtual analog procedural synthesizer with band-limited PolyBLEP oscillators (Saw, Pulse/PWM, Triangle, Sine), 4-pole 24 dB/oct Moog ladder resonant filter with soft saturation, and exponential ADSR envelope generator.
+- [x] **Hardware VID/PID Fingerprinting**: Persistent hardware identification in `RawInputHandler` & `DeviceManager` ensuring keyboards retain roles across different USB ports.
 - [x] **ParametricEQ**: Studio-grade 3-band parametric equalizer (Low Shelf, Mid Peaking Bell, High Shelf) using RBJ Audio EQ Cookbook biquad filters in Direct Form II Transposed with zero audio-thread allocation.\n- [x] **ResonantFilter**: Zero-delay feedback State Variable Filter (SVF) with Low-Pass, High-Pass, Band-Pass modes and resonance Q control (0.5 - 10.0).
 - [x] **StereoDelay**: Tempo-synced ping-pong delay connected to `MetronomeClock` (1/4 to 1/16 triplets) with analog HF feedback damping.
 - [x] **AlgorithmicReverb**: 8-comb / 4-allpass Schroeder core with pre-allocated static buffers and zero audio-thread memory allocation.

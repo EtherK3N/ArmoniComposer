@@ -20,6 +20,7 @@
 #include "MetronomeClock.h"
 #include "BpmQuantizer.h"
 #include "DspFxRack.h"
+#include "AnalogSynthEngine.h"
 #include "MidiSyncEngine.h"
 
 class AudioEngine;
@@ -146,6 +147,7 @@ public:
     // BPM & Clock access
     MetronomeClock& getMetronome() { return metronome; }
     BpmQuantizer&   getQuantizer() { return quantizer; }
+    AnalogSynthEngine& getSynthEngine() { return synthEngine; }
     DspFxRack&      getMasterFxRack() { return masterFxRack; }
     MidiSyncEngine& getMidiSyncEngine() { return midiSync; }
     const MidiSyncEngine& getMidiSyncEngine() const { return midiSync; }
@@ -165,6 +167,7 @@ private:
 
     MetronomeClock metronome;
     BpmQuantizer   quantizer;
+    AnalogSynthEngine synthEngine;
     DspFxRack      masterFxRack;
     MidiSyncEngine midiSync;
 

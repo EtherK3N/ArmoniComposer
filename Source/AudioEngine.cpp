@@ -201,6 +201,7 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
     currentSampleRate = sampleRate;
     metronome.prepareToPlay(sampleRate, samplesPerBlockExpected);
     quantizer.setSampleRate(sampleRate);
+    synthEngine.prepare(sampleRate);
     masterFxRack.prepare(sampleRate, samplesPerBlockExpected);
     midiSync.prepare(sampleRate, metronome.getTempo());
 
@@ -217,6 +218,7 @@ void AudioEngine::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 void AudioEngine::releaseResources()
 {
     metronome.releaseResources();
+    synthEngine.reset();
     masterFxRack.reset();
     const juce::ScopedLock sl(audioLock);
     for (auto& v : voices)

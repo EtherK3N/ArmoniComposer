@@ -10,6 +10,22 @@ DeviceManager::DeviceManager()
             d.id = id;
             d.friendlyName = "Keyboard " + juce::String(devices.size() + 1);
             d.role = KeyboardRole::Unassigned;
+
+            // Smart Reconnect: check if a device with matching hardware VID/PID was previously configured
+            const auto fp = RawInputHandler::extractHardwareFingerprint(id);
+            if (fp.isNotEmpty())
+            {
+                for (const auto& [existingId, existingDev] : devices)
+                {
+                    if (RawInputHandler::extractHardwareFingerprint(existingDev.id) == fp)
+                    {
+                        d.friendlyName = existingDev.friendlyName;
+                        d.role = existingDev.role;
+                        break;
+                    }
+                }
+            }
+
             devices[id.toStdString()] = d;
             rawInput.setFriendlyName(id, d.friendlyName);
 
