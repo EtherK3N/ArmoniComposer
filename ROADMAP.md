@@ -63,7 +63,7 @@ The core architecture and low-level technical foundations are implemented. The i
 ### Pitch & Time
 - [ ] Real-time sample resampler using `juce::LagrangeInterpolator`
 - [ ] Granular pitch transpose — change pitch without changing playback speed
-- [ ] Velocity emulation — derived from keystroke timing interval
+- [x] Velocity emulation — derived from keystroke timing interval and dwell duration (VelocityEmulationEngine, Linear/Exp/Log/Compressed/Fixed curves)
 
 ---
 

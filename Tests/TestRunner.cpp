@@ -24,6 +24,7 @@
 #include "../Source/StemExporter.h"
 #include "../Source/MidiExporter.h"
 #include "../Source/MidiSyncEngine.h"
+#include "../Source/VelocityEmulationEngine.h"
 
 // Simple lightweight test harness
 #define RUN_TEST(fn) \
@@ -816,6 +817,66 @@ void testAnalogSynthEnginePolyphony()
 
     assert(finalEnergy < 0.01f && "Synth voices must fade to silence after release");
 }
+void testVelocityEmulationCadenceAndCurves()
+{
+    VelocityEmulationEngine engine;
+    const juce::String devId = "USB_KEYBOARD_01";
+    const int keyC4 = 67;
+
+    engine.setCurve(VelocityCurve::Fixed);
+    engine.setFixedVelocity(95);
+    int vel = engine.registerKeyDown(devId, keyC4, 1000, false);
+    assert(vel == 95 && "Fixed curve must return exact configured velocity");
+
+    engine.reset();
+    engine.setCurve(VelocityCurve::Exponential);
+
+    const int slowVel = engine.registerKeyDown(devId, keyC4, 2000, false);
+    const int fastVel = engine.registerKeyDown(devId, keyC4, 2070, false);
+    assert(fastVel > slowVel && "Rapid cadence strike must produce higher velocity than slow strike");
+
+    engine.reset();
+    const int normalVel = engine.registerKeyDown(devId, keyC4, 3000, false);
+    engine.reset();
+    const int boostedVel = engine.registerKeyDown(devId, keyC4, 3000, true);
+    assert(boostedVel >= normalVel && "Shift modifier must apply velocity accent boost");
+
+    engine.reset();
+    engine.setCurve(VelocityCurve::Compressed);
+    const int compVel = engine.registerKeyDown(devId, keyC4, 4000, false);
+    assert(compVel >= 60 && "Compressed curve must maintain solid floor for drums");
+
+    engine.setVelocityRange(30, 110);
+    assert(engine.getMinVelocity() == 30);
+    assert(engine.getMaxVelocity() == 110);
+    const int clampedVel = engine.registerKeyDown(devId, keyC4, 4050, true);
+    assert(clampedVel >= 30 && clampedVel <= 110 && "Generated velocity must adhere to bounds");
+}
+
+void testVelocityEmulationDwellAndGain()
+{
+    VelocityEmulationEngine engine;
+    const juce::String devId = "USB_KEYBOARD_02";
+    const int keyD4 = 68;
+
+    engine.registerKeyDown(devId, keyD4, 5000, false);
+    int releaseVel = 0;
+    const juce::int64 dwellMs = engine.registerKeyUp(devId, keyD4, 5140, &releaseVel);
+
+    assert(dwellMs == 140 && "Key dwell time must match exact millisecond difference");
+    assert(releaseVel >= 1 && releaseVel <= 127 && "Release velocity must be valid MIDI range");
+
+    const juce::int64 samples44k = VelocityEmulationEngine::dwellTimeToSamples(100, 44100.0);
+    assert(samples44k == 4410 && "100ms at 44.1kHz must yield exactly 4410 samples");
+
+    const float minGain = VelocityEmulationEngine::velocityToGain(1);
+    const float midGain = VelocityEmulationEngine::velocityToGain(64);
+    const float maxGain = VelocityEmulationEngine::velocityToGain(127);
+
+    assert(minGain > 0.0f && minGain < 0.15f && "Minimum velocity must yield subtle audible gain");
+    assert(midGain > minGain && midGain < maxGain && "Gain must increase monotonically with velocity");
+    assert(maxGain >= 1.40f && maxGain <= 1.55f && "Maximum velocity must reach target headroom");
+}
 
 int main(int argc, char* argv[])
 {
@@ -842,9 +903,11 @@ int main(int argc, char* argv[])
     RUN_TEST(testStemExporterWavGeneration);
     RUN_TEST(testMidiExporterFileGeneration);
     RUN_TEST(testMidiSyncEngineClockPulses);
+    RUN_TEST(testVelocityEmulationCadenceAndCurves);
+    RUN_TEST(testVelocityEmulationDwellAndGain);
 
     std::cout << "\n=======================================================\n";
-    std::cout << "  ALL 18 TEST SUITES PASSED! (100% Core, Virtual Analog Synth, Hardware Fingerprint & Studio Export) (100% Core, DSP Parametric EQ & Studio Export) (100% Core, DSP & Studio Export)\n";
+    std::cout << "  ALL 20 TEST SUITES PASSED! (100% Core, Synth, Hardware Fingerprint, Studio Export & Velocity Engine) (100% Core, Virtual Analog Synth, Hardware Fingerprint & Studio Export) (100% Core, DSP Parametric EQ & Studio Export) (100% Core, DSP & Studio Export)\n";
     std::cout << "=======================================================\n\n";
     return 0;
 }

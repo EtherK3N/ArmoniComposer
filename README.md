@@ -7,170 +7,200 @@
 [![Framework](https://img.shields.io/badge/JUCE-7%20%2F%208-FF6600?style=for-the-badge&logoColor=white)](https://juce.com/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://microsoft.com/windows)
 [![License](https://img.shields.io/badge/License-AGPL%20v3.0-blue?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-v0.1.0%20Preview-a855f7?style=for-the-badge)](ROADMAP.md)
+[![Status](https://img.shields.io/badge/Status-v0.4.0%20Studio-10b981?style=for-the-badge)](RELEASE_NOTES_v0.4.0.md)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Try_in_Browser-9333ea?style=for-the-badge&logo=googlechrome&logoColor=white)](https://etherk3n.github.io/ArmoniComposer/)
 
-**Turn any cheap USB keyboard into a live loop station, drum machine, and synth rig.**  
-No expensive hardware. No subscriptions. No cloud. Just your creativity.
+**Turn any cheap USB keyboard into a live loop station, drum machine, and virtual analog synth rig.**  
+No expensive hardware. No subscriptions. No cloud. Just raw musical performance.
 
-[The Idea](#-the-idea) · [Live Demo](#-try-the-interactive-demo-now) · [How It Works](#-how-it-works) · [Build from Source](#-build-from-source) · [Roadmap](#-roadmap) · [Contribute](#-contribute) · [Author](#-author)
+[The Idea](#-the-idea) · [Live Browser Demo](#-try-the-interactive-demo-now) · [How It Works](#-how-it-works) · [Features](#-key-features) · [Build from Source](#-build-from-source) · [Roadmap](#-roadmap) · [Contribute](#-contribute) · [Author](#-author)
 
 </div>
 
 ---
 
-## The Idea
+## 💡 The Idea
 
-Dedicated drum pads, MIDI controllers, and loop stations cost €80–€500.  
-A USB membrane keyboard at a flea market costs €2.
+Dedicated drum pads, MIDI controllers, and hardware loop stations cost €80–€500.  
+A discarded USB membrane keyboard at a flea market costs €2.
 
-**Armoni Composer** (by EtherK3N / K3N Solver) makes every cheap keyboard a performance instrument. Plug in one keyboard or four — the system tracks each device independently at the OS kernel level via Win32 Raw Input, routes each to its own instrument role (Drums / Bass / Synth / FX), and lets you build layered live loops in real time, just like a Boss RC-505 but with zero specialized hardware.
+**Armoni Composer** makes every computer keyboard an expressive musical instrument. Plug in one keyboard or four — the system tracks each physical device independently at the OS kernel level via Win32 Raw Input, routes each to its own instrument role (Drums / Bass / Synth / FX), and lets you build layered live loops in real time, just like a Boss RC-505 or Akai MPC, with zero specialized hardware.
 
-> Built for bedroom producers, street performers, students in underfunded schools, and anyone who believes music should not cost money to make.
-
----
-
-## Try the Interactive Demo Now
-
-No build required. Open directly in your browser:
-
-**[`preview/index.html`](preview/index.html)** — double-click or open with any browser.
-
-The simulator includes:
-- Full visual keyboard rig with color-coded instrument zones
-- Audible synthesized metronome (40–240 BPM, adjustable)
-- 3-track live overdub loop station (Record → Play → Overdub)
-- Per-layer modular FX routing (Delay, Reverb, Low-Pass Filter)
-- Custom audio file loader (MP3, WAV, FLAC, OGG) — load any stem or track onto a key and remix it live
-- Multi-deck switcher to simulate 1–3 separate physical keyboards
-- Realtime canvas oscilloscope
+> Built for bedroom producers, street performers, students in underfunded schools, and anyone who believes music production should not cost a fortune.
 
 ---
 
-## How It Works
+## 🌐 Try the Interactive Demo Now
+
+**Zero install required.** Play the full DAW simulation right now in your browser:
+
+👉 **[Launch Armoni Composer Live on GitHub Pages](https://etherk3n.github.io/ArmoniComposer/)**
+
+The interactive workstation includes:
+- **Visual Keyboard Rig**: Color-coded instrument zones for 1–4 connected keyboards.
+- **Audible Synthesized Metronome**: 40–240 BPM, odd meters, and visual LED.
+- **3-Track Live Overdub Looper**: Record → Play → Overdub with real-time waveform playheads.
+- **Modular FX Chains**: Per-layer Delay, Algorithmic Reverb, and Low-Pass Filter.
+- **Parameter Locks & Hit Inspector**: Nudge micro-timing, gate tails, and pitch transposition.
+- **Custom Sample Import**: Load MP3, WAV, FLAC, OGG files directly onto any key.
+- **Realtime Canvas Oscilloscope & WebM Audio Export**.
+
+---
+
+## ⚙️ How It Works
 
 ```
-USB Keyboard #1 (€3) ─┐
-USB Keyboard #2 (€4) ─┤──► Win32 Raw Input WM_INPUT
+USB Keyboard #1 (€2) ─┐
+USB Keyboard #2 (€3) ─┤──► Win32 Raw Input WM_INPUT (Device Fingerprinting VID/PID)
 USB Keyboard #3 (€2) ─┘         │
                                   ▼
                         RawInputHandler
-                        (device path disambiguation)
+                   (per-keyboard hardware routing)
                                   │
-                    ┌─────────────┴──────────────┐
-                    ▼                            ▼
-            DeviceManager                 MappingEngine
-          (role assignment)            (per-key sound routing)
-                    │
-                    ▼
-            AudioEngine (C++ / JUCE)
-            32-voice polyphonic sampler
-            ASIO / WASAPI / DirectSound
-                    │
-                    ▼
-            LoopStation (multi-track overdub)
-            sample-accurate recording & playback
+         ┌────────────────────────┼────────────────────────┐
+         ▼                        ▼                        ▼
+  DeviceManager          VelocityEmulationEngine    ShiftLayerSystem
+ (role assignment)       (strike cadence & dwell)   (Drums/Bass/Synth)
+         │                        │                        │
+         └────────────────────────┼────────────────────────┘
+                                  ▼
+                       AudioEngine (C++17 / JUCE)
+          ┌───────────────────────┴───────────────────────┐
+          ▼                                               ▼
+  AnalogSynthEngine                               32-Voice Sampler
+  PolyBLEP Oscillators                            Pre-allocated RAM Pool
+  4-pole Moog Ladder Filter                       Procedural 808 Kit
+          │                                               │
+          └───────────────────────┬───────────────────────┘
+                                  ▼
+                             DspFxRack
+               3-Band RBJ Parametric EQ (Biquad DF-II)
+               Zero-Delay State Variable Filter (SVF)
+               Tempo-Synced Stereo Ping-Pong Delay
+               Schroeder Algorithmic Reverb Core
+                                  │
+                                  ▼
+                             LoopStation
+                Sample-Accurate Overdub Multi-Track
+                Sorted Timeline Cursor Scheduling O(1)
+                                  │
+         ┌────────────────────────┴────────────────────────┐
+         ▼                                                 ▼
+   StemExporter                                       MidiExporter
+  24-bit Multitrack WAV                             Type 1 Standard MIDI
+  Peak-Normalized Mixdown                           24 PPQN Realtime Sync
 ```
 
-The critical technical challenge this solves: Windows normally merges all USB keyboard input into a single global key event stream. This app intercepts input **before** the OS merges it, at the Raw Input device level, allowing true per-physical-keyboard instrument assignment even with 4+ keyboards connected simultaneously.
+The critical engineering challenge this solves: Windows merges all USB keyboard inputs into a single global key event stream. Armoni Composer intercepts input **before** OS merging, capturing raw hardware handles and persistent `VID:PID:MI` fingerprints so your devices retain their musical roles across USB ports.
 
 ---
 
-## Key Features
+## ⚡ Key Features
 
-| Feature | Detail |
-|---|---|
-| Multi-keyboard disambiguation | Up to 16 concurrent USB keyboards via Win32 Raw Input (`WM_INPUT`), each mapped to an independent instrument role |
-| Event-based looper (`LoopTrack`) | Sample-accurate timestamped event recording with sorted timeline cursor scheduling ($O(1)$ block processing) |
-| 32-voice polyphonic sampler | Pre-allocated voice pool with seamless voice-stealing on capacity |
-| Built-in procedural starter kit | Synthesized 808 Kick, Snare, Hi-Hat, Sub-Bass, Acid 303, Moog Saw, Rhodes for immediate playability |
-| Audio sample import | Lossless decoding of WAV, MP3, FLAC, OGG into pre-allocated memory buffers |
-| Modular FX architecture | Delay / Reverb / Low-pass filter routing per loop layer (implemented in preview simulator; native C++ DSP planned for v0.3.0) |
-| Audio backend drivers | ASIO / WASAPI / DirectSound device management via JUCE |
-| 100% offline | Zero cloud, zero telemetry, zero accounts |
-| Prototype latency target | Sub-10ms target on low-buffer ASIO/WASAPI exclusive configurations |
+| Subsystem | Architectural Implementation | Production Detail |
+|---|---|---|
+| **Multi-Keyboard Disambiguation** | Win32 Raw Input (`WM_INPUT`) | Up to 16 concurrent USB keyboards with persistent `VID:PID` hardware fingerprinting |
+| **Keystroke Velocity Emulation** | `VelocityEmulationEngine` | Generates acoustic MIDI velocity (1–127) from strike cadence and dwell duration; 5 perceptual curves |
+| **Virtual Analog Synthesizer** | `AnalogSynthEngine` | Anti-aliased PolyBLEP oscillators (Saw/Pulse-PWM/Tri/Sine), 4-pole Moog ladder resonant filter, ADSR |
+| **Studio Parametric EQ** | `ParametricEQ` | 3-band Low Shelf, Mid Bell, High Shelf using RBJ Audio EQ Cookbook biquads (Direct Form II Transposed) |
+| **Modular DSP FX Rack** | `DspFxRack` | Resonant SVF filter, tempo-synced ping-pong delay, Schroeder 8-comb/4-allpass algorithmic reverb |
+| **Sample-Accurate Looper** | `LoopTrack` | Sorted timeline cursor scheduling ($O(1)$ block processing), micro-timing nudge, parameter locks |
+| **Precision Metronome & Clock** | `MetronomeClock` | Sample-accurate 40–300 BPM clock, odd meters (3/4, 4/4, 6/8), procedural woodblock click generator |
+| **Grid Quantizer & Swing** | `BpmQuantizer` | 1/4 to 1/32 triplet snap-to-grid, configurable humanize/swing factor, auto bar-snap on record stop |
+| **Multitrack Stem Export** | `StemExporter` | Offline bounce of synchronized 24-bit broadcast WAV stems per lane + summed master mix |
+| **Standard MIDI File Export** | `MidiExporter` | High-resolution 960 PPQN Type 1 `.mid` sequence export with micro-timing and GM drum mapping |
+| **Realtime MIDI Clock Sync** | `MidiSyncEngine` | 24 PPQN standard MIDI clock (`0xF8`), Start (`0xFA`), Stop (`0xFC`) for external hardware synths & DAWs |
+| **Audio Drivers & Latency** | JUCE Audio Engine | ASIO, WASAPI Exclusive, WASAPI Shared, DirectSound with sub-10ms buffer performance |
+| **Automated Verification** | `TestRunner` | **20 Automated Test Suites (100% Passing)** covering DSP, oscillators, timing, and export |
 
 ---
 
-## Build from Source
-
-> **Note — v0.1.0 Preview**: The native C++ executable is currently being finalized. The interactive browser simulator in `preview/index.html` is fully functional and demonstrates the complete UX. Native build instructions are tracked in [ROADMAP.md](ROADMAP.md).
+## 🏗️ Build from Source
 
 ### Prerequisites
 
 - Windows 10 / 11 (64-bit)
 - CMake 3.22+
-- Visual Studio 2019/2022 with C++ workload, or Clang/LLVM
-- JUCE 7 or 8 (fetched automatically as a submodule)
+- Visual Studio 2019/2022 with C++ workload (MSVC) or Clang
+- JUCE 7 or 8 (fetched automatically if not present locally)
 
 ```bash
-# Clone with submodules
-git clone --recursive https://github.com/EtherK3N/ArmoniComposer.git
+# Clone the repository
+git clone https://github.com/EtherK3N/ArmoniComposer.git
 cd ArmoniComposer
 
-# Configure
+# Configure CMake
 cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
-# Build
-cmake --build build --config Release
+# Build GUI Application and Automated Test Suite
+cmake --build build --config Release --parallel
 ```
 
-Binary output: `build/ArmoniComposer_artefacts/Release/ArmoniComposer.exe`
+### Running the Automated Test Suite
 
-For Docker-based isolated testing:
-
-```bat
-DOCKER_BUILD_AND_TEST.bat
+```powershell
+.\build\ArmoniComposer_Tests_artefacts\Release\ArmoniComposer_Tests.exe
 ```
 
-See [TESTING.md](TESTING.md) for the full test suite guide.
+Expected output:
+```
+=======================================================
+  ARMONI COMPOSER - AUTOMATED TEST SUITE
+=======================================================
+
+[ RUN      ] testAudioEngineProceduralKitAndVoices...
+[       OK ] testAudioEngineProceduralKitAndVoices PASSED
+...
+[ RUN      ] testVelocityEmulationCadenceAndCurves...
+[       OK ] testVelocityEmulationCadenceAndCurves PASSED
+[ RUN      ] testVelocityEmulationDwellAndGain...
+[       OK ] testVelocityEmulationDwellAndGain PASSED
+
+=======================================================
+  ALL 20 TEST SUITES PASSED!
+=======================================================
+```
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap & Milestones
 
-This is a community-driven project. The core architecture is in place; the roadmap defines what we build next together.
-
-| Phase | Version | Focus | Status |
+| Phase | Target | Core Innovations | Status |
 |---|---|---|---|
-| Core Engine & Hardware Layer | v0.1.0 | Win32 Raw Input, sampler, loop station, procedural synth | Preview |
-| Metronome & BPM Quantize | v0.2.0 | Sample-accurate clock, snap-to-grid, swing/humanize | Planned |
-| DSP FX Engine | v0.3.0 | Per-track EQ, resonant filter, algorithmic reverb | Planned |
-| Studio Integration | v0.4.0 | Multitrack WAV export, MIDI output, Ableton Link sync | Planned |
-| Cross-Platform | v0.5.0+ | macOS IOKit, Linux libevdev/ALSA/JACK, VST3/CLAP plugin | Planned |
+| **Phase 1** | v0.1.0 | Win32 Raw Input kernel hook, 32-voice sampler, procedural 808 kit, looper | **Completed [100%]** |
+| **Phase 2** | v0.2.0 | MetronomeClock (40-300 BPM), BpmQuantizer, ShiftLayerSystem, Hit Inspector | **Completed [100%]** |
+| **Phase 3** | v0.3.0 | PolyBLEP Analog Synth, Moog ladder filter, 3-Band Parametric EQ, SVF, Reverb, Delay | **Completed [100%]** |
+| **Phase 4** | v0.4.0 | 24-bit WAV Stem Export, 960 PPQN MIDI Export, 24 PPQN MIDI Clock Sync, Velocity Engine | **Completed [100%]** |
+| **Phase 5** | v0.5.0+ | macOS Apple IOKit HID, Linux libevdev/ALSA/JACK, VST3/CLAP plugin format | In Planning |
 
-Full detail: [ROADMAP.md](ROADMAP.md)
-
----
-
-## Contribute
-
-All skill levels welcome — musicians, audio engineers, C++ developers, UI designers, documentation writers.
-
-- Browse open issues for `good first issue` tags
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) for PR guidelines
-- Open a Discussion if you have a feature idea, use case story, or want to test with unusual hardware
-
-If you use this tool, make something with it, or just find the concept interesting — **a star on the repo helps other people find it.** That is how open source grows.
+Full technical detail: [ROADMAP.md](ROADMAP.md)
 
 ---
 
-## Author
+## 🤝 Contributing
 
-Built by **[@EtherK3N](https://github.com/EtherK3N)** (K3N Solver) — part of the **K3N** creative and engineering brand.
+We welcome contributions from audio engineers, DSP programmers, C++ developers, and musicians:
 
-High-performance C++, real-time audio systems, accessible technology, modern web and application development.
-
-Open for collaboration, feedback, and contributions via GitHub Issues and Discussions.
-
----
-
-## Security & Compliance
-
-We adhere to modern cybersecurity resilience standards (including the EU Cyber Resilience Act / NIS2). For our complete Software Bill of Materials (SBOM), threat model, and vulnerability reporting process, see **[SECURITY.md](SECURITY.md)**.
+- Check out open issues or propose new features via GitHub Discussions.
+- Review [CONTRIBUTING.md](CONTRIBUTING.md) for branch strategy and commit standards.
+- Follow our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 
-## License
+## 👤 Author & Studio
 
-This project is licensed under the terms of the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).  
-Commercial / closed-source licensing inquiries can be directed to the author.
+Designed and engineered by **[@EtherK3N](https://github.com/EtherK3N)** (K3N Solver).  
+Part of the **K3N** independent engineering brand — developing low-latency audio software, high-performance web systems, and open-source tooling.
+
+---
+
+## 🔒 Security & Compliance
+
+Armoni Composer adheres to modern cybersecurity resilience standards (including the EU Cyber Resilience Act / NIS2). For our Software Bill of Materials (SBOM), threat modeling, and vulnerability disclosure policy, see **[SECURITY.md](SECURITY.md)**.
+
+---
+
+## 📄 License
+
+This software is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).  
+Commercial and proprietary licensing inquiries: `k3n.solver@gmail.com` / `etherk3n@icloud.com`.

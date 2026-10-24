@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(ArmoniComposer VERSION 0.1.0)
+project(ArmoniComposer VERSION 0.4.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,7 +31,7 @@ endif()
 juce_add_gui_app(ArmoniComposer
     PRODUCT_NAME "Armoni Composer"
     COMPANY_NAME "EtherK3N"
-    VERSION 0.1.0
+    VERSION 0.4.0
 )
 
 target_sources(ArmoniComposer PRIVATE
@@ -47,6 +47,7 @@ target_sources(ArmoniComposer PRIVATE
     Source/DspFxRack.cpp
     Source/ParametricEQ.cpp
     Source/AnalogSynthEngine.cpp
+    Source/VelocityEmulationEngine.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp
@@ -108,6 +109,7 @@ target_sources(ArmoniComposer_Tests PRIVATE
     Source/DspFxRack.cpp
     Source/ParametricEQ.cpp
     Source/AnalogSynthEngine.cpp
+    Source/VelocityEmulationEngine.cpp
     Source/StemExporter.cpp
     Source/MidiExporter.cpp
     Source/MidiSyncEngine.cpp
